@@ -8,7 +8,7 @@
       - AMIを作成
   4．Code Build(2)を実行
       - テスト？
-  5．Code DeployもしくはCode Buildでカスタムデプロイ
+  5．Code Deploy
 
 参考：
 https://github.com/awslabs/ami-builder-packer
