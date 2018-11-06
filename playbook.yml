@@ -1,0 +1,4 @@
+- hosts: all
+  sudo: yes
+  tasks:
+    - yum: name=httpd state=installed
