@@ -14,6 +14,6 @@
       },
       {
         "type" : "ansible",
-        "playbook_file" : "./ansible/site.yml"
+        "playbook_file" : "ansible/site.yml"
     }]
 }
