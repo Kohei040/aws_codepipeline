@@ -9,7 +9,11 @@
         "ami_name": "packer_ansible_{{ timestamp }}"
     }],
     "provisioners": [{
+        "type" : "shell",
+        "inline" : "sudo yum -y update"
+      },
+      {
         "type" : "ansible",
-        "playbook_file" : "./playbook.yml"
+        "playbook_file" : "./ansible/site.yml"
     }]
 }
