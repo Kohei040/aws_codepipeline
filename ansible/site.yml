@@ -7,4 +7,3 @@
         state: present
   roles:
     - httpd
-    - handler

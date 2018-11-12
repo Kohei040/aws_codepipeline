@@ -1,4 +1,4 @@
 - name: httpd Auto Satrt On
   systemd:
-    - name: httpd
-      enabled: yes
+    name: httpd
+    enabled: yes
