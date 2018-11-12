@@ -1,5 +1,4 @@
-- name: httpd Auto Satrt On
+- name: auto_satrt_httpd
   systemd:
     name: httpd
-    state: started
     enabled: yes

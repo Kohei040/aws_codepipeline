@@ -2,3 +2,4 @@
   yum:
     name: httpd-2.4.34-1.amzn2.1.1
     state: present
+    notify: auto_satrt_httpd
