@@ -7,6 +7,9 @@
         "ssh_username": "ec2-user",
         "ssh_timeout": "5m",
         "ami_name": "packer_ansible_{{ timestamp }}",
+        "tags": {
+          "Name": "{{user `ami_name`}}"
+        },
         "snapshot_tags": {
           "Name": "packer_ansible_{{ timestamp }}"
         }
