@@ -24,7 +24,13 @@ sg_id   = os.environ['SG_ID']
 def lambda_handler(event, context):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    modify_ssm_lc()
+    result = modify_ssm_lc()
+    if result == 0:
+        logger.info('Lambdaの処理が正常終了しました。')
+        code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
+    else:
+        logger.error('Lambdaの処理に失敗しました。')
+        code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
 
 # AMI_IDをSSMパラメータストアから取得
 def get_ami_id():
@@ -62,9 +68,6 @@ def modify_ssm_lc():
             Type  = 'String',
             Overwrite=True
             )
-        success = code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
         return 0
     except:
-        failure = code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
         return 1
-
