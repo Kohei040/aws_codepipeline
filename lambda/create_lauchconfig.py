@@ -62,9 +62,9 @@ def modify_ssm_lc():
             Type  = 'String',
             Overwrite=True
             )
-        success = code_pipeline.put_job_success_result(jobId=jobId=event['CodePipeline.job']['id'])
+        success = code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
         return 0
     except:
-        failure = code_pipeline.put_job_failure_result(jobId=jobId=event['CodePipeline.job']['id'])
+        failure = code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
         return 1
 
