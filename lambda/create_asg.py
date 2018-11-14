@@ -53,7 +53,7 @@ def get_launchconfig():
 def create_autoscale():
     launchconfig = get_launchconfig()
     if launchconfig != 1:
-        # try:
+        try:
             asg_name = ori_asg_name + '_' + exec_time
             new_asg = asg_client.create_auto_scaling_group(
                 AutoScalingGroupName=asg_name,
@@ -78,9 +78,9 @@ def create_autoscale():
                 ]
             )
             logger.info('作成したAutoScalingGroupは' + asg_name + 'です。')
-            return new_asg
-        # except:
-        #     logger.error('AutoScalingGroupの作成に失敗しました。')
-        #     return 1
+            return 0
+        except:
+            logger.error('AutoScalingGroupの作成に失敗しました。')
+            return 1
     else:
         return 1
