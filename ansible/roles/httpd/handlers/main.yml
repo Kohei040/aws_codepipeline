@@ -1,0 +1,4 @@
+- name: auto_satrt_httpd
+  systemd:
+    name: httpd
+    enabled: yes

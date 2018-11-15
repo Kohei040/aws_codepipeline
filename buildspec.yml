@@ -15,10 +15,13 @@ phases:
       - ./packer validate amazon-linux_packer.json
   build:
     commands:
-      - echo "Set AWS credentials"
+      - echo 'Set AWS credentials'
       - aws configure set region $AWS_REGION
       - echo 'Create AMI'
-      - ./packer build amazon-linux_packer.json
+      - ./packer build amazon-linux_packer.json | tee build.log
   post_build:
     commands:
-      - echo "Build finished `date`"
+      - create_ami_id=`egrep "us-east-1\:\sami\-" build.log | cut -d' ' -f2`
+      - echo $create_ami_id
+      - aws ssm put-parameter --name 'ami_id' --value $create_ami_id --type String --overwrite
+      - echo 'Build finished `date`'
