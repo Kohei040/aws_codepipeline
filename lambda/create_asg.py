@@ -10,16 +10,18 @@ from datetime import datetime as dt
 
 # Lambdaの環境変数
 ori_asg_name = os.environ['ASG_NAME']
-ssm_lc_name  = os.environ['LAUNCHCONFIG']
+ssm_lc_name  = os.environ['SSM_LC']
 min_size     = os.environ['MIN_SIZE']
 max_size     = os.environ['MAX_SIZE']
 az_1         = os.environ['AZ_1']
 az_2         = os.environ['AZ_2']
-subnet_1     = os.environ['SUBNET_1']
-subnet_2     = os.environ['SUBNET_2']
+subnet       = os.environ['SUBNET']
 alb_target   = os.environ['ALB_TARGET']
+ssm_new_asg  = os.environ['SSM_NEW_ASG']
+ssm_old_asg  = os.environ['SSM_OLD_ASG']
 
 exec_time  = dt.now().strftime('%Y%m%d%H%M')
+
 ssm_client = boto3.client('ssm')
 asg_client = boto3.client('autoscaling')
 code_pipeline = boto3.client('codepipeline')
@@ -29,7 +31,7 @@ logger.setLevel(logging.INFO)
 
 # Lambda実行
 def lambda_handler(event, context):
-    result = create_autoscale()
+    result = update_ssm_new_asg()
     if result == 0:
         logger.info('Lambdaの処理が正常終了しました。')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
@@ -55,7 +57,7 @@ def create_autoscale():
     if launchconfig != 1:
         try:
             asg_name = ori_asg_name + '_' + exec_time
-            new_asg = asg_client.create_auto_scaling_group(
+            asg_client.create_auto_scaling_group(
                 AutoScalingGroupName=asg_name,
                 LaunchConfigurationName=launchconfig,
                 MinSize=int(min_size),
@@ -69,18 +71,56 @@ def create_autoscale():
                     ],
                 HealthCheckType='EC2',
                 HealthCheckGracePeriod=60,
-                VPCZoneIdentifier=subnet_1 + ',' + subnet_2,
+                VPCZoneIdentifier=subnet,
                 Tags=[
                     {
                         'Key': 'Name',
-                        'Value': asg_name,
+                        'Value': asg_name
                     },
                 ]
             )
             logger.info('作成したAutoScalingGroupは' + asg_name + 'です。')
-            return 0
+            return asg_name
         except:
             logger.error('AutoScalingGroupの作成に失敗しました。')
+            return 1
+    else:
+        return 1
+
+# SSMパラメータストアの旧AutoScalingGroupを更新
+def update_ssm_old_asg():
+    try:
+        get_old_asg = ssm_client.get_parameters(
+            Names = [ssm_new_asg]
+            )['Parameters'][0]['Value']
+        ssm_client.put_parameter(
+            Name  = ssm_old_asg,
+            Value = get_old_asg,
+            Type  = 'String',
+            Overwrite = True
+        )
+        logger.info('旧AutoScalingGroupは' + get_old_asg + 'です。')
+        return 0
+    except:
+        logger.error('旧AutoScalingGroupの取得に失敗しました。')
+        return 1
+
+# SSMパラメータストアの新AutoScalingGroupを更新
+def update_ssm_new_asg():
+    new_asg = create_autoscale()
+    old_asg = update_ssm_old_asg()
+    if new_asg != 1 and old_asg == 0:
+        try:
+            ssm_client.put_parameter(
+                Name = ssm_new_asg,
+                Value = new_asg,
+                Type = 'String',
+                Overwrite = True
+                )
+            logger.info('新AutoScalingGroupは' + new_asg + 'です。')
+            return 0
+        except:
+            logger.error('新AutoScalingGroupのSSM更新に失敗しました。')
             return 1
     else:
         return 1
