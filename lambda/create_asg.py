@@ -105,7 +105,7 @@ def create_autoscale():
 
 # ALBのHealtcheck確認
 def alb_healthcheck(asg_name):
-    logger.info('healthcheck' + asg_name)
+    logger.info('healthcheck：' + asg_name)
     try:
         # ASGで起動したインスタンスIDを抽出
         describe_asg = asg_client.describe_auto_scaling_groups(
@@ -113,6 +113,7 @@ def alb_healthcheck(asg_name):
                 asg_name
                 ]
             )['AutoScalingGroups'][0]['Instances'][0]['InstanceId']
+        logger.info(describe_asg)
         instances = describe_asg.split()
         logger.info(instances)
 
