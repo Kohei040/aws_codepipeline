@@ -12,6 +12,7 @@ from datetime import datetime as dt
 ssm_ami       = os.environ['SSM_AMI']
 ssm_lc        = os.environ['SSM_LC']
 iam_role      = os.environ['IAM_ROLE']
+keypair       = os.environ['KEYPAIR']
 instance_type = os.environ['INSTANCE_TYPE']
 pre_lc_name   = os.environ['PRE_LC_NAME']
 sg_id         = os.environ['SG_ID']
@@ -21,10 +22,11 @@ ssm_client    = boto3.client('ssm')
 lc_client     = boto3.client('autoscaling')
 code_pipeline = boto3.client('codepipeline')
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 # Lambda実行
 def lambda_handler(event, context):
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
     result = modify_ssm_lc()
     if result == 0:
         logger.info('Lambdaの処理が正常終了しました。')
@@ -39,10 +41,10 @@ def get_ami_id():
         ssm_get_value = ssm_client.get_parameters(
             Names = [ssm_ami]
             )['Parameters'][0]['Value']
-            logger.info('起動設定のAMIは' + ssm_get_value + 'です。')
+        logger.info('起動設定のAMIは' + ssm_get_value + 'です。')
         return ssm_get_value
     except:
-        logger.error("SSMのパラメータ取得に失敗しました")
+        logger.error('SSMのパラメータ取得に失敗しました')
         return 1
 
 # Launchconfig作成
@@ -54,6 +56,7 @@ def create_launchconfig():
             create_lc = lc_client.create_launch_configuration(
                 IamInstanceProfile=iam_role,
                 ImageId=ami_id,
+                KeyName=keypair,
                 InstanceType=instance_type,
                 LaunchConfigurationName=update_lc_name,
                 SecurityGroups=[sg_id]

@@ -24,6 +24,7 @@ exec_time  = dt.now().strftime('%Y%m%d%H%M')
 
 ssm_client = boto3.client('ssm')
 asg_client = boto3.client('autoscaling')
+elb_client = boto3.client('elbv2')
 code_pipeline = boto3.client('codepipeline')
 
 logger = logging.getLogger()
@@ -80,12 +81,49 @@ def create_autoscale():
                 ]
             )
             logger.info('作成したAutoScalingGroupは' + asg_name + 'です。')
+
+            healthcheck = alb_healthcheck(asg_name)
+            logger.info(healthcheck)
+            if healthcheck == 0:
+                pass
+            else:
+                raise
+
             return asg_name
         except:
             logger.error('AutoScalingGroupの作成に失敗しました。')
             return 1
     else:
         return 1
+
+# ALBのHealtcheck確認
+def alb_healthcheck(asg_name):
+    try:
+        # ASGで起動したインスタンスIDを抽出
+        describe_asg = asg_client.describe_auto_scaling_groups(
+            AutoScalingGroupNames=[
+                asg_name
+                ]
+            )['AutoScalingGroups'][0]['Instances'][0]['InstanceId']
+        instances = describe_asg.split() 
+        logger.info(instances)
+
+        # ALBのHealtcheckが完了するまで待機
+        for instance in instances:
+            waiter = elb_client.get_waiter('target_in_service')
+            waiter.wait(
+                TargetGroupArn=alb_target,
+                Targets=[
+                    {
+                        'Id': instance
+                    },
+                ]
+            )
+        return 0
+    except:
+        logger.info('ALBのHealtcheckに失敗しました。')
+        return 1
+
 
 # SSMパラメータストアの旧AutoScalingGroupを更新
 def update_ssm_old_asg():
