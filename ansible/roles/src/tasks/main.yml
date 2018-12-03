@@ -4,4 +4,4 @@
     dest: /var/www/html/
     owner: apache
     group: apache
-    mode: 755
+    mode: 0755

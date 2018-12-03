@@ -38,7 +38,13 @@ def lambda_handler(event, context):
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
     else:
         logger.error('Lambdaの処理が失敗しました。')
-        code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
+        code_pipeline.put_job_failure_result(
+            jobId=event['CodePipeline.job']['id'],
+            failureDetails={
+                'type': 'JobFailed',
+                'message': '異常終了'
+            }
+        )
 
 # 最新のLaunchConfigをSSMパラメータストアから取得
 def get_launchconfig():
@@ -81,6 +87,7 @@ def create_autoscale():
                 ]
             )
             logger.info('作成したAutoScalingGroupは' + asg_name + 'です。')
+            logger.info('HealthCheckに合格するまで待機します。')
 
             healthcheck = alb_healthcheck(asg_name)
             logger.info(healthcheck)
@@ -98,6 +105,7 @@ def create_autoscale():
 
 # ALBのHealtcheck確認
 def alb_healthcheck(asg_name):
+    logger.info('healthcheck' + asg_name)
     try:
         # ASGで起動したインスタンスIDを抽出
         describe_asg = asg_client.describe_auto_scaling_groups(
@@ -105,7 +113,7 @@ def alb_healthcheck(asg_name):
                 asg_name
                 ]
             )['AutoScalingGroups'][0]['Instances'][0]['InstanceId']
-        instances = describe_asg.split() 
+        instances = describe_asg.split()
         logger.info(instances)
 
         # ALBのHealtcheckが完了するまで待機
