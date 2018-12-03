@@ -33,7 +33,12 @@ def lambda_handler(event, context):
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
     else:
         logger.error('Lambdaの処理が失敗しました。')
-        code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
+        code_pipeline.put_job_failure_result(
+            jobId=event['CodePipeline.job']['id'],
+            failureDetails={
+                'type': 'JobFailed',
+                'message': '異常終了'
+        )
 
 # AMI_IDをSSMパラメータストアから取得
 def get_ami_id():

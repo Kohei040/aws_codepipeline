@@ -112,9 +112,10 @@ def alb_healthcheck(asg_name):
             AutoScalingGroupNames=[
                 asg_name
                 ]
-            )['AutoScalingGroups'][0]['Instances'][0]['InstanceId']
+            )
         logger.info(describe_asg)
-        instances = describe_asg.split()
+        test = describe_asg['AutoScalingGroups'][0]['Instances'][0]['InstanceId']
+        instances = test.split()
         logger.info(instances)
 
         # ALBのHealtcheckが完了するまで待機
