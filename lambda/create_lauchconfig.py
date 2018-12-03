@@ -38,6 +38,7 @@ def lambda_handler(event, context):
             failureDetails={
                 'type': 'JobFailed',
                 'message': '異常終了'
+            }
         )
 
 # AMI_IDをSSMパラメータストアから取得
