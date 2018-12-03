@@ -1,6 +1,6 @@
 - name: Copy www
   copy:
-    src: ansible/index.html
+    src: index.html
     dest: /var/www/html/
     owner: apache
     group: apache

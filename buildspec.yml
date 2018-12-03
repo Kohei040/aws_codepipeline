@@ -11,6 +11,7 @@ phases:
       - apt-add-repository ppa:ansible/ansible
       - apt-get update -y
       - apt-get install -y ansible
+      - ls -l
       - echo 'Validate packer json'
       - ./packer validate amazon-linux_packer.json
   build:
