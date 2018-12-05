@@ -19,8 +19,6 @@ sg_id         = os.environ['SG_ID']
 
 exec_time     = dt.now().strftime('%Y%m%d%H%M')
 ssm_client    = boto3.client('ssm')
-lc_client     = boto3.client('autoscaling')
-code_pipeline = boto3.client('codepipeline')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -28,16 +26,19 @@ logger.setLevel(logging.INFO)
 # Lambda実行
 def lambda_handler(event, context):
     result = modify_ssm_lc()
+    logger.info(event)
+
+    code_pipeline = boto3.client('codepipeline')
     if result == 0:
-        logger.info('Lambdaの処理が正常終了しました。')
+        logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
     else:
-        logger.error('Lambdaの処理が失敗しました。')
+        logger.error('Lambda terminated abnormally')
         code_pipeline.put_job_failure_result(
             jobId=event['CodePipeline.job']['id'],
             failureDetails={
                 'type': 'JobFailed',
-                'message': '異常終了'
+                'message': 'Abnormally'
             }
         )
 
@@ -47,10 +48,10 @@ def get_ami_id():
         ssm_get_value = ssm_client.get_parameters(
             Names = [ssm_ami]
             )['Parameters'][0]['Value']
-        logger.info('起動設定のAMIは' + ssm_get_value + 'です。')
+        logger.info('AMI used for launchconfig is ' + ssm_get_value)
         return ssm_get_value
-    except:
-        logger.error('SSMのパラメータ取得に失敗しました')
+    except Exception as e:
+        logger.error('SSM parameter acquisition failed\n' + e)
         return 1
 
 # Launchconfig作成
@@ -58,6 +59,7 @@ def create_launchconfig():
     ami_id = get_ami_id()
     if ami_id != 1:
         try:
+            lc_client     = boto3.client('autoscaling')
             update_lc_name = pre_lc_name + '_' + exec_time
             create_lc = lc_client.create_launch_configuration(
                 IamInstanceProfile=iam_role,
@@ -67,10 +69,10 @@ def create_launchconfig():
                 LaunchConfigurationName=update_lc_name,
                 SecurityGroups=[sg_id]
                 )
-            logger.info('作成した起動設定は' + update_lc_name + 'です。')
+            logger.info('Created launchconfig is' + update_lc_name)
             return update_lc_name
-        except:
-            logger.error('起動設定の作成に失敗しました。')
+        except Exception as e:
+            logger.error('Failed to create lauchconfig\n' + e)
             return 1
     else:
         return 1
@@ -80,15 +82,16 @@ def modify_ssm_lc():
     update_ssm_lc = create_launchconfig()
     if update_ssm_lc != 1:
         try:
-            put_ssm = ssm_client.put_parameter(
+            ssm_client.put_parameter(
                 Name  = ssm_lc,
                 Value = update_ssm_lc,
                 Type  = 'String',
                 Overwrite=True
                 )
+            logger.info('Update of SSM parameter is completed')
             return 0
-        except:
-            logger.info('SSMパラメータの更新に失敗しました。')
+        except Exception as e:
+            logger.error('Failed to update SSM parameter\n' + e)
             return 1
     else:
         return 1
