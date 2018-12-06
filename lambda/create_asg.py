@@ -33,6 +33,8 @@ logger.setLevel(logging.INFO)
 # Lambda実行
 def lambda_handler(event, context):
     result = update_ssm_new_asg()
+    logger.info(event)
+    
     if result == 0:
         logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
