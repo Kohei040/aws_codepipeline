@@ -22,8 +22,9 @@ ssm_old_asg  = os.environ['SSM_OLD_ASG']
 
 exec_time  = dt.now().strftime('%Y%m%d%H%M')
 
-ssm_client = boto3.client('ssm')
-asg_client = boto3.client('autoscaling')
+ssm_client    = boto3.client('ssm')
+asg_client    = boto3.client('autoscaling')
+elb_client    = boto3.client('elbv2')
 code_pipeline = boto3.client('codepipeline')
 
 logger = logging.getLogger()
@@ -32,12 +33,21 @@ logger.setLevel(logging.INFO)
 # Lambda実行
 def lambda_handler(event, context):
     result = update_ssm_new_asg()
+    logger.info(event)
+
+    # CodePipelineへ結果を通知
     if result == 0:
-        logger.info('Lambdaの処理が正常終了しました。')
+        logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
     else:
-        logger.error('Lambdaの処理が失敗しました。')
-        code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'])
+        logger.error('Lambda terminated abnormally')
+        code_pipeline.put_job_failure_result(
+            jobId=event['CodePipeline.job']['id'],
+            failureDetails={
+                'type': 'JobFailed',
+                'message': 'Abnormally'
+            }
+        )
 
 # 最新のLaunchConfigをSSMパラメータストアから取得
 def get_launchconfig():
@@ -45,10 +55,10 @@ def get_launchconfig():
         get_ssm_lc = ssm_client.get_parameters(
             Names = [ssm_lc_name]
             )['Parameters'][0]['Value']
-        logger.info('起動設定は' + get_ssm_lc + 'です。')
+        logger.info('Launchconfig is ' + get_ssm_lc)
         return get_ssm_lc
-    except:
-        logger.error('SSMのパラメータ取得に失敗しました。')
+    except Exception as e:
+        logger.error('SSM parameter acquisition failed\n' + str(e))
         return 1
 
 # AutoScalingGroup作成
@@ -79,13 +89,46 @@ def create_autoscale():
                     },
                 ]
             )
-            logger.info('作成したAutoScalingGroupは' + asg_name + 'です。')
+            logger.info('Created AutoScalingGroup is ' + asg_name)
+            logger.info('Confirm ELB healthcheck ')
+            time.sleep(120)
+
             return asg_name
-        except:
-            logger.error('AutoScalingGroupの作成に失敗しました。')
+        except Exception as e:
+            logger.error('Failed to create AutoScalingGroup\n' + str(e))
             return 1
     else:
         return 1
+
+# ALBのHealtcheck確認
+def alb_healthcheck():
+    created_asg = create_autoscale()
+    try:
+        # ASGで起動したインスタンスIDを抽出
+        describe_asg = asg_client.describe_auto_scaling_groups(
+            AutoScalingGroupNames=[
+                created_asg
+                ]
+            )['AutoScalingGroups'][0]['Instances']
+
+        # ALBのHealtcheckが完了するまで待機
+        for instances in describe_asg:
+            instance = instances['InstanceId']
+            logger.info('Started EC2 Instances is ' + instance)
+            waiter   = elb_client.get_waiter('target_in_service')
+            waiter.wait(
+                TargetGroupArn=alb_target,
+                Targets=[
+                    {
+                        'Id': instance
+                    },
+                ]
+            )
+        return created_asg
+    except Exception as e:
+        logger.info('ELB healtcheck failed!\n' + str(e))
+        return 1
+
 
 # SSMパラメータストアの旧AutoScalingGroupを更新
 def update_ssm_old_asg():
@@ -99,15 +142,15 @@ def update_ssm_old_asg():
             Type  = 'String',
             Overwrite = True
         )
-        logger.info('旧AutoScalingGroupは' + get_old_asg + 'です。')
+        logger.info('Old AutoScalingGroup is ' + get_old_asg)
         return 0
-    except:
-        logger.error('旧AutoScalingGroupの取得に失敗しました。')
+    except Exception as e:
+        logger.error('Failed to update SSM Paramter(Old AutoScalingGroup)\n' + e)
         return 1
 
 # SSMパラメータストアの新AutoScalingGroupを更新
 def update_ssm_new_asg():
-    new_asg = create_autoscale()
+    new_asg = alb_healthcheck()
     old_asg = update_ssm_old_asg()
     if new_asg != 1 and old_asg == 0:
         try:
@@ -117,10 +160,10 @@ def update_ssm_new_asg():
                 Type = 'String',
                 Overwrite = True
                 )
-            logger.info('新AutoScalingGroupは' + new_asg + 'です。')
+            logger.info('New AutoScalingGroup is ' + new_asg)
             return 0
-        except:
-            logger.error('新AutoScalingGroupのSSM更新に失敗しました。')
+        except Exception as e:
+            logger.error('Failed to update SSM paramter(New AutoScalingGroup)\n' + e)
             return 1
     else:
         return 1

@@ -25,10 +25,9 @@
     1. SSMパラメータストアのAutoScalingGroup名の新旧を更新
     1. 新AutoScalingGroupのHeatlhStatusを確認
     1. CodePipelineへジョブの完了を通知
-1. [Lambda]Blue/Green deploymnet実施
-    1. SSMパラメータストアから新旧のAutoScalingGroup名を取得
-    1. ALBに紐づくインスタンスのHealthCheckが全て[healthy]であることを確認
-    1. 旧AutoScalingGroupをALBのTargetGroupから削除
+1. [Lambda]旧AutoScalingGrooup削除
+    1. SSMパラメータストアから旧AutoScalingGroup名を取得
+    1. 旧AutoScalingGroupを削除
     1. CodePipelineへジョブの完了を通知
 
 ※2の手順以降は全てCodePipeline上で管理
@@ -36,6 +35,14 @@
 # Golden AMI作成イメージ
 
 ![Create_GoledenAMI](https://github.com/Kohei040/aws_code_series_validation/raw/test/image/Create_Golden_AMI.PNG)
+
+# CodeBuildの環境について
+
+|項目|設定値|
+|:--|:--|
+|ソースプロパイダ|CodePipeline|
+|イメージ|aws/codebuild/ubuntu-base:14.04|
+|ロール|下記参照|
 
 # Lambdaの環境について
 - Python3.6
@@ -68,15 +75,13 @@
 |AZ_2|'AvailabilityZones'|
 |SUBNET|'SubnetのID'|
 |MAX_SIZE|'EC2の最低起動台数'|
-|MIN_SIZE|'EC2の最高起動台数|
+|MIN_SIZE|'EC2の最大起動台数|
 
-- Blue/Green Deploy用
+- 旧AutoScalingGrooup削除用
 
 |Key|Value|
 |:--|:--|
-|SSM_NEW_ASG|new_asg|
 |SSM_OLD_ASG|old_asg|
-|ALB_TARGET|'ALBのARN'|
 
 # System Manager Parameter
 AWS System ManagerのParameter Storeの用途は、
@@ -92,7 +97,7 @@ CodePipeline上で作成した成果物を引き継ぐために利用する
 # IAM Role
 各サービスにアタッチするIAM Roleのポリシーは以下となる
 
-- Lambda(共通) 
+- Lambda(共通)
   - AWSLambdaExecute(AWS managed policy)
   - AWSCodePipelineFullAccess(AWS managed policy)
   - AmazonEC2FullAccess(AWS managed policy)
@@ -153,4 +158,7 @@ CodePipeline上で作成した成果物を引き継ぐために利用する
 ```
 
 # 参考
+- awslabs
 https://github.com/awslabs/ami-builder-packer
+- [Packer]Amazon AMI Builder
+https://www.packer.io/docs/builders/amazon.html#using-an-iam-instance-profile
