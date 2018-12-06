@@ -34,7 +34,8 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     result = update_ssm_new_asg()
     logger.info(event)
-    
+
+    # CodePipelineへ結果を通知
     if result == 0:
         logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
@@ -57,7 +58,7 @@ def get_launchconfig():
         logger.info('Launchconfig is ' + get_ssm_lc)
         return get_ssm_lc
     except Exception as e:
-        logger.error('SSM parameter acquisition failed\n' + e)
+        logger.error('SSM parameter acquisition failed\n' + str(e))
         return 1
 
 # AutoScalingGroup作成
@@ -94,7 +95,7 @@ def create_autoscale():
 
             return asg_name
         except Exception as e:
-            logger.error('Failed to create AutoScalingGroup\n' + e)
+            logger.error('Failed to create AutoScalingGroup\n' + str(e))
             return 1
     else:
         return 1
@@ -125,7 +126,7 @@ def alb_healthcheck():
             )
         return created_asg
     except Exception as e:
-        logger.info('ELB healtcheck failed!\n' + e)
+        logger.info('ELB healtcheck failed!\n' + str(e))
         return 1
 
 

@@ -19,6 +19,7 @@ sg_id         = os.environ['SG_ID']
 
 exec_time     = dt.now().strftime('%Y%m%d%H%M')
 ssm_client    = boto3.client('ssm')
+code_pipeline = boto3.client('codepipeline')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -28,7 +29,7 @@ def lambda_handler(event, context):
     result = modify_ssm_lc()
     logger.info(event)
 
-    code_pipeline = boto3.client('codepipeline')
+    # CodePipelineへ結果を通知
     if result == 0:
         logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
@@ -51,7 +52,7 @@ def get_ami_id():
         logger.info('AMI used for launchconfig is ' + ssm_get_value)
         return ssm_get_value
     except Exception as e:
-        logger.error('SSM parameter acquisition failed\n' + e)
+        logger.error('SSM parameter acquisition failed\n' + str(e))
         return 1
 
 # Launchconfig作成
@@ -72,7 +73,7 @@ def create_launchconfig():
             logger.info('Created launchconfig is' + update_lc_name)
             return update_lc_name
         except Exception as e:
-            logger.error('Failed to create lauchconfig\n' + e)
+            logger.error('Failed to create lauchconfig\n' + str(e))
             return 1
     else:
         return 1
@@ -91,7 +92,7 @@ def modify_ssm_lc():
             logger.info('Update of SSM parameter is completed')
             return 0
         except Exception as e:
-            logger.error('Failed to update SSM parameter\n' + e)
+            logger.error('Failed to update SSM parameter\n' + str(e))
             return 1
     else:
         return 1
