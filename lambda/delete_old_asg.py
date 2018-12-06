@@ -56,9 +56,11 @@ def delete_asg():
     old_asg = get_old_autoscaling()
     if old_asg != 1:
         try:
-            asg_client.delete_auto_scaling_group(
-                AutoScalingGroupName = old_asg
+            delete = asg_client.delete_auto_scaling_group(
+                AutoScalingGroupName = old_asg,
+                ForceDelete = True
             )
+            logger.info(delete)
             return 0
         except Exception as e:
             logger.error('Failed to delete old AutoScalingGroup \n' + str(e))
