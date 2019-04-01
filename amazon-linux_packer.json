@@ -20,7 +20,7 @@
       },
       {
         "type" : "ansible",
-	"extra_arguments": "--vault-id=P@ssw0rd"
+	"extra_arguments": "--vault-id=P@ssw0rd",
         "playbook_file" : "ansible/site.yml"
     }]
 }
