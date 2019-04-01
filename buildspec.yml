@@ -19,7 +19,8 @@ phases:
     commands:
       - echo 'Set AWS credentials'
       - aws configure set region $AWS_REGION
-      - echo "P@ssw0rd" > vault_pass_file 
+      - echo "$PASS" > vault_pass_file 
+      - echo "$PASS"  
       - echo 'Create AMI'
       - ./packer build amazon-linux_packer.json | tee build.log
   post_build:
