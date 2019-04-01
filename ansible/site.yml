@@ -3,5 +3,5 @@
   roles:
     - httpd
     - src
-  vars_file:
+  vars_files:
     - ./vars/var_sample.yml
