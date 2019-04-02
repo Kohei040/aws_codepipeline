@@ -21,6 +21,7 @@ phases:
       - aws configure set region $AWS_REGION
       - echo "$PASS" > vault_pass_file 
       - echo "$NAME" > ami_name_file
+      - echo "$NAME" 
       - echo 'Create AMI'
       - ./packer build amazon-linux_packer.json | tee build.log
   post_build:
