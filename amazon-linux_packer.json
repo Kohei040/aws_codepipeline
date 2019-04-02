@@ -1,6 +1,7 @@
 {
     "variables":{
-	"vault_path": "vault_pass_file"
+	"vault_path": "vault_pass_file",
+	"name": "ami_name_file"
     },
     "builders": [{
         "type": "amazon-ebs",
@@ -9,12 +10,12 @@
         "instance_type": "t3.micro",
         "ssh_username": "ec2-user",
         "ssh_timeout": "5m",
-        "ami_name": "packer_ansible_{{ timestamp }}",
+        "ami_name": "{{user `mame`}}_{{ timestamp }}",
         "tags": {
           "Name": "{{user `ami_name`}}"
         },
         "snapshot_tags": {
-          "Name": "packer_ansible_{{ timestamp }}"
+          "Name": "{{user `ami_name`}}"
         }
     }],
     "provisioners": [{
