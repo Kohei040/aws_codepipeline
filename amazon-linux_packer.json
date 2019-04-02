@@ -1,7 +1,7 @@
 {
     "variables":{
 	"vault_path": "vault_pass_file",
-	"ami": "ami_name_file"
+	"name": "{{env `NAME`}}"
     },
     "builders": [{
         "type": "amazon-ebs",
@@ -10,7 +10,7 @@
         "instance_type": "t3.micro",
         "ssh_username": "ec2-user",
         "ssh_timeout": "5m",
-        "ami_name": "{{user `ami`}}_{{ timestamp }}",
+        "ami_name": "{{user `name`}}_{{ timestamp }}",
         "tags": {
           "Name": "{{user `ami_name`}}"
         },
