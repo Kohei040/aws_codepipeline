@@ -23,8 +23,31 @@
         "inline" : "sudo yum -y update"
       },
       {
+        "type" : "shell",
+        "inline" : "pwd && ls -l"
+      },
+      {
+        "type" : "shell",
+        "inline" : "mkdir -p /var/www/test"
+      },
+      {
+        "type" : "file",
+        "source" : "buildspec.yml",
+        "destination" : "/var/www/src"
+      },
+      {
+        "type" : "file",
+        "source" : "ansible",
+        "destination" : "/var/www/src/"
+      },
+      {
+        "type" : "shell",
+        "inline" : "ls -Ral"
+      },
+      {
         "type" : "ansible",
-	"extra_arguments": "--vault-id={{user `vault_path`}}",
+	      "extra_arguments": "--vault-id={{user `vault_path`}}",
         "playbook_file" : "ansible/site.yml"
     }]
 }
+
