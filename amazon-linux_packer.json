@@ -1,7 +1,7 @@
 {
     "variables":{
-	"vault_path": "vault_pass_file",
-	"name": "{{env `NAME`}}"
+	     "vault_path": "vault_pass_file",
+	      "name": "{{env `NAME`}}"
     },
     "builders": [{
         "type": "amazon-ebs",
@@ -28,7 +28,7 @@
       },
       {
         "type" : "shell",
-        "inline" : "mkdir -p /var/www/test"
+        "inline" : "sudo mkdir -p /var/www/test"
       },
       {
         "type" : "file",
@@ -38,11 +38,11 @@
       {
         "type" : "file",
         "source" : "ansible",
-        "destination" : "/var/www/src/"
+        "destination" : "/var/www/src"
       },
       {
         "type" : "shell",
-        "inline" : "ls -Ral"
+        "inline" : "sudo ls -Ral /var/www/hypatx"
       },
       {
         "type" : "ansible",
@@ -50,4 +50,3 @@
         "playbook_file" : "ansible/site.yml"
     }]
 }
-
