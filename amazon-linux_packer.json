@@ -28,17 +28,17 @@
       },
       {
         "type" : "shell",
-        "inline" : "sudo mkdir -p /var/www/test"
+        "inline" : "sudo mkdir -p /var/www/test && sudo chown ec2-user:ec2-user /var/www/test"
       },
       {
         "type" : "file",
         "source" : "buildspec.yml",
-        "destination" : "/var/www/src"
+        "destination" : "/var/www/test"
       },
       {
         "type" : "file",
         "source" : "ansible",
-        "destination" : "/var/www/src"
+        "destination" : "/var/www/test"
       },
       {
         "type" : "shell",
