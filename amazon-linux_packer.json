@@ -42,7 +42,7 @@
       },
       {
         "type" : "shell",
-        "inline" : "sudo ls -Ral /var/www/hypatx"
+        "inline" : "sudo ls -Ral /var/www/test"
       },
       {
         "type" : "ansible",
