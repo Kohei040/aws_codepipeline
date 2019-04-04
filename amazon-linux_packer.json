@@ -33,12 +33,12 @@
       {
         "type" : "file",
         "source" : "buildspec.yml",
-        "destination" : "/var/www/test"
+        "destination" : "/var/www/test/"
       },
       {
         "type" : "file",
         "source" : "ansible",
-        "destination" : "/var/www/test"
+        "destination" : "/var/www/test/"
       },
       {
         "type" : "shell",
