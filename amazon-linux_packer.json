@@ -32,7 +32,7 @@
       },
       {
         "type" : "file",
-        "source" : "./*",
+        "source" : "./",
         "destination" : "/var/www/test/"
       },
       {
