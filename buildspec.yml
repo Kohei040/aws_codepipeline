@@ -21,10 +21,10 @@ phases:
       - aws configure set region $AWS_REGION
       - echo "$PASS" > vault_pass_file 
       - echo 'Create AMI'
-      - ./packer build amazon-linux_packer.json | tee build.log
+        #- ./packer build amazon-linux_packer.json | tee build.log
   post_build:
     commands:
       - create_ami_id=`egrep "us-east-1\:\sami\-" build.log | cut -d' ' -f2`
       - echo $create_ami_id
-      - aws ssm put-parameter --name $SSM_AMI --value $create_ami_id --type String --overwrite
+        #- aws ssm put-parameter --name $SSM_AMI --value $create_ami_id --type String --overwrite
       - echo 'Build finished `date`'
