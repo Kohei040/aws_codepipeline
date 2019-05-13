@@ -1,16 +1,18 @@
+
 version: 0.2
 
 phases:
   pre_build:
     commands:
-      - echo 'Install Packer 1.3.2'
-      - curl -qL -o packer.zip https://releases.hashicorp.com/packer/1.3.2/packer_1.3.2_linux_amd64.zip && unzip packer.zip
+      - echo 'Install Packer 1.3.4'
+      - curl -qL -o packer.zip https://releases.hashicorp.com/packer/1.3.4/packer_1.3.4_linux_amd64.zip && unzip packer.zip
       - echo 'Install Ansible'
       - apt-get update -y
       - apt-get install -y software-properties-common
       - apt-add-repository ppa:ansible/ansible
       - apt-get update -y
       - apt-get install -y ansible
+      - ansible --version
       - ls -l
       - echo 'Validate packer json'
       - ./packer validate amazon-linux_packer.json
@@ -18,11 +20,13 @@ phases:
     commands:
       - echo 'Set AWS credentials'
       - aws configure set region $AWS_REGION
+      - echo "$PASS" > vault_pass_file
       - echo 'Create AMI'
       - ./packer build amazon-linux_packer.json | tee build.log
   post_build:
     commands:
       - create_ami_id=`egrep "us-east-1\:\sami\-" build.log | cut -d' ' -f2`
       - echo $create_ami_id
-      - aws ssm put-parameter --name 'ami_id' --value $create_ami_id --type String --overwrite
+      - aws ssm put-parameter --name $SSM_AMI --value $create_ami_id --type String --overwrite
       - echo 'Build finished `date`'
+

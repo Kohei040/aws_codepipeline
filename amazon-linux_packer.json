@@ -1,17 +1,21 @@
 {
+    "variables":{
+	     "vault_path": "vault_pass_file",
+	      "name": "{{env `NAME`}}"
+    },
     "builders": [{
         "type": "amazon-ebs",
         "region": "us-east-1",
-        "source_ami": "ami-013be31976ca2c322",
+        "source_ami": "ami-0de53d8956e8dcf80",
         "instance_type": "t3.micro",
         "ssh_username": "ec2-user",
         "ssh_timeout": "5m",
-        "ami_name": "packer_ansible_{{ timestamp }}",
+        "ami_name": "{{user `name`}}_{{ timestamp }}",
         "tags": {
           "Name": "{{user `ami_name`}}"
         },
         "snapshot_tags": {
-          "Name": "packer_ansible_{{ timestamp }}"
+          "Name": "{{user `ami_name`}}"
         }
     }],
     "provisioners": [{
@@ -19,7 +23,25 @@
         "inline" : "sudo yum -y update"
       },
       {
+        "type" : "shell",
+        "inline" : "pwd && ls -l"
+      },
+      {
+        "type" : "shell",
+        "inline" : "sudo mkdir -p /var/www/test && sudo chown ec2-user:ec2-user /var/www/test"
+      },
+      {
+        "type" : "file",
+        "source" : "./",
+        "destination" : "/var/www/test/"
+      },
+      {
+        "type" : "shell",
+        "inline" : "sudo ls -Ral /var/www/test"
+      },
+      {
         "type" : "ansible",
+	      "extra_arguments": "--vault-id={{user `vault_path`}}",
         "playbook_file" : "ansible/site.yml"
     }]
 }

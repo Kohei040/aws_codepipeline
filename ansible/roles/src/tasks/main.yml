@@ -1,7 +1,7 @@
 - name: Copy www
   copy:
     src: index.html
-    dest: /var/www/html/
+    dest: "{{ path }}"
     owner: apache
     group: apache
     mode: 0755
