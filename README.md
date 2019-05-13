@@ -41,8 +41,17 @@
 |項目|設定値|
 |:--|:--|
 |ソースプロパイダ|CodePipeline|
-|イメージ|aws/codebuild/ubuntu-base:14.04|
+|イメージ|aws/codebuild/standard:1.0-1.8.0|
 |ロール|下記参照|
+
+# CodeBuildの環境変数
+
+|Key|Value|Input|
+|:--|:--|:--|
+|USER|ec2-user|PLAINTEXT|
+|PASS|/CodeBuild/vault-pass|PARAMETER_STORE|
+|NAME|'xxxxxxx'|PLAINTEXT|
+|SSM_AMI|ami_id|PLAINTEXT|
 
 # Lambdaの環境について
 - Python3.6
@@ -89,6 +98,7 @@ CodePipeline上で作成した成果物を引き継ぐために利用する
 
 |Name|Type|Value|
 |:--|:--|:--|
+|/CodeBuild/vault-pass|<SecureString>|
 |ami_id|String|ami-xxxxxxxx|
 |lc_name|String|'LaunchConfigのName'|
 |new_asg|String|'新AutoScalingGroupのName'|
@@ -162,3 +172,4 @@ CodePipeline上で作成した成果物を引き継ぐために利用する
 https://github.com/awslabs/ami-builder-packer
 - [Packer]Amazon AMI Builder
 https://www.packer.io/docs/builders/amazon.html#using-an-iam-instance-profile
+
