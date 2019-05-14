@@ -64,6 +64,7 @@ def create_launchconfig():
             update_lc_name = pre_lc_name + '_' + exec_time
             userdata_file  = open(./userdata.txt)
             userdata       = userdata_file.read()
+            logger.info(userdata)
             create_lc = lc_client.create_launch_configuration(
                 IamInstanceProfile=iam_role,
                 ImageId=ami_id,
