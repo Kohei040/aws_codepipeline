@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     result = modify_ssm_lc()
     logger.info(event)
 
-    CodePipelineへ結果を通知
+    # CodePipelineへ結果を通知
     if result == 0:
         logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
