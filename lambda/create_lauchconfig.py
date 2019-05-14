@@ -24,12 +24,14 @@ code_pipeline = boto3.client('codepipeline')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+logger.info(exec_time)
+
 # Lambda実行
 def lambda_handler(event, context):
     result = modify_ssm_lc()
     logger.info(event)
 
-    # CodePipelineへ結果を通知
+    CodePipelineへ結果を通知
     if result == 0:
         logger.info('Lambda terminated normally')
         code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
@@ -62,14 +64,15 @@ def create_launchconfig():
         try:
             lc_client      = boto3.client('autoscaling')
             update_lc_name = pre_lc_name + '_' + exec_time
-            userdata_file  = open(./userdata.txt)
+            # Lambda実行環境上に"usedata.txt"を配置していること
+            userdata_file  = open('./userdata.txt')
             userdata       = userdata_file.read()
             logger.info(userdata)
             create_lc = lc_client.create_launch_configuration(
                 IamInstanceProfile=iam_role,
                 ImageId=ami_id,
                 KeyName=keypair,
-                Userdata=userdata,
+                UserData=userdata,
                 InstanceType=instance_type,
                 LaunchConfigurationName=update_lc_name,
                 SecurityGroups=[sg_id]
