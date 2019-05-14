@@ -60,12 +60,15 @@ def create_launchconfig():
     ami_id = get_ami_id()
     if ami_id != 1:
         try:
-            lc_client     = boto3.client('autoscaling')
+            lc_client      = boto3.client('autoscaling')
             update_lc_name = pre_lc_name + '_' + exec_time
+            userdata_file  = open(./userdata.txt)
+            userdata       = userdata_file.read()
             create_lc = lc_client.create_launch_configuration(
                 IamInstanceProfile=iam_role,
                 ImageId=ami_id,
                 KeyName=keypair,
+                Userdata=userdata,
                 InstanceType=instance_type,
                 LaunchConfigurationName=update_lc_name,
                 SecurityGroups=[sg_id]
@@ -96,3 +99,4 @@ def modify_ssm_lc():
             return 1
     else:
         return 1
+
